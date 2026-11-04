@@ -20,12 +20,13 @@ workflows:
       - name: Set up environment and local properties
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
-      - name: Run Unit and Rules Tests
+          chmod +x gradlew
+      - name: Run Unit and Realtime Tests
         script: |
-          gradle testDebugUnitTest
+          ./gradlew testDebugUnitTest --no-daemon --no-configuration-cache
       - name: Build Android Release APK and App Bundle (AAB)
         script: |
-          gradle assembleRelease bundleRelease --stacktrace
+          ./gradlew assembleRelease bundleRelease --stacktrace --no-daemon --no-configuration-cache
     artifacts:
       - app/build/outputs/apk/release/*.apk
       - app/build/outputs/bundle/release/*.aab

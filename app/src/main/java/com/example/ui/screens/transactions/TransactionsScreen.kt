@@ -150,9 +150,11 @@ fun TransactionsScreen(
             } else {
                 items(filteredList, key = { it.id }) { tx ->
                     val isPositive = tx.amount >= 0
-                    val dateFormatted = tx.createdAt?.toDate()?.let {
-                        SimpleDateFormat("MMM dd, yyyy • HH:mm", Locale.US).format(it)
-                    } ?: "Just now"
+                    val dateFormatted = try {
+                        SimpleDateFormat("MMM dd, yyyy • HH:mm", Locale.US).format(Date(tx.createdAt))
+                    } catch (_: Exception) {
+                        "Just now"
+                    }
 
                     Box(
                         modifier = Modifier
@@ -187,7 +189,7 @@ fun TransactionsScreen(
 
                             Column(horizontalAlignment = Alignment.End) {
                                 Text(
-                                    text = String.format(Locale.US, "%s$%.2f", if (isPositive) "+" else "", tx.amount),
+                                    text = String.format(Locale.US, "%s₦%.2f", if (isPositive) "+" else "", tx.amount),
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
                                     color = if (isPositive) NeonGreen else DangerNeon
                                 )
@@ -224,8 +226,8 @@ fun TransactionsScreen(
                     DetailRow("ID", tx.id)
                     DetailRow("Reference", tx.reference)
                     DetailRow("Type", tx.type)
-                    DetailRow("Amount", String.format(Locale.US, "$%.2f %s", tx.amount, tx.currency))
-                    DetailRow("Balance After", String.format(Locale.US, "$%.2f", tx.balanceAfter))
+                    DetailRow("Amount", String.format(Locale.US, "₦%.2f %s", tx.amount, tx.currency))
+                    DetailRow("Balance After", String.format(Locale.US, "₦%.2f", tx.balanceAfter))
                     DetailRow("Status", tx.status)
                     DetailRow("Description", tx.description)
                 }

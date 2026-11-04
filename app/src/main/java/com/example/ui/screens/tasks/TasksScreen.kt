@@ -156,7 +156,7 @@ fun TasksScreen(
                                     color = NeonMagenta
                                 )
                                 Text(
-                                    text = "Earn $2.00 eligible balance for every valid invite",
+                                    text = "Earn ₦20.00 eligible balance for every valid invite",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = TextSecondary
                                 )
@@ -255,7 +255,7 @@ fun TasksScreen(
                             Column(horizontalAlignment = Alignment.End) {
                                 if (task.rewardEligible > 0) {
                                     Text(
-                                        text = String.format(Locale.US, "+$%.2f", task.rewardEligible),
+                                        text = String.format(Locale.US, "+₦%.2f", task.rewardEligible),
                                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                         color = NeonGreen
                                     )

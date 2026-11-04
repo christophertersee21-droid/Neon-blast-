@@ -47,6 +47,10 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.R
 import com.example.data.model.Announcement
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.example.ads.AdMobBanner
+import com.example.data.model.AppConfig
 import com.example.data.model.UserProfile
 import com.example.data.repository.FirestoreRepository
 import com.example.ui.components.NeonButton
@@ -79,6 +83,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
+    val config by repository.observeAppConfig().collectAsState(initial = AppConfig())
     val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
     val canClaimDaily = user.lastLoginDate != todayStr
 
@@ -133,16 +138,18 @@ fun HomeScreen(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Admin Icon (accessible if isAdmin or toggle)
-                    IconButton(
-                        onClick = onAdminClicked,
-                        modifier = Modifier.testTag("admin_dashboard_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AdminPanelSettings,
-                            contentDescription = "Admin",
-                            tint = if (user.isAdmin) NeonCyan else TextSecondary.copy(alpha = 0.7f)
-                        )
+                    // Admin Icon (accessible if hasAdminPrivileges)
+                    if (user.hasAdminPrivileges()) {
+                        IconButton(
+                            onClick = onAdminClicked,
+                            modifier = Modifier.testTag("admin_dashboard_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AdminPanelSettings,
+                                contentDescription = "Admin Master Console",
+                                tint = NeonGold
+                            )
+                        }
                     }
 
                     // Notification Bell
@@ -211,10 +218,10 @@ fun HomeScreen(
                         .padding(14.dp)
                 ) {
                     Column {
-                        Text("Eligible Balance", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                        Text("Withdrawable (₦)", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = String.format(Locale.US, "$%.2f", user.eligibleBalance),
+                            text = String.format(Locale.US, "₦%,.2f", user.eligibleBalance),
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black),
                             color = NeonGreen
                         )
@@ -438,7 +445,7 @@ fun HomeScreen(
                             color = NeonMagenta
                         )
                         Text(
-                            text = "Your code: ${user.referralCode}. Get $2.00 for each friend!",
+                            text = "Your code: ${user.referralCode}. Get ₦20.00 for each friend!",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary
                         )
@@ -454,6 +461,13 @@ fun HomeScreen(
                     }
                 }
             }
+        }
+
+        item {
+            AdMobBanner(
+                adUnitId = config.adMobBannerId,
+                isEnabled = config.adMobEnabled
+            )
         }
 
         item {

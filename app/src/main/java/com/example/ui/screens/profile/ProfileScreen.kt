@@ -289,13 +289,14 @@ fun ProfileScreen(
             }
         }
 
-        // Admin Dashboard Entry
-        item {
-            NeonCard(
-                modifier = Modifier.fillMaxWidth(),
-                borderColor = NeonCyan
-            ) {
-                Row(
+        // Admin Dashboard Entry (only for authorized admin emails)
+        if (user.hasAdminPrivileges()) {
+            item {
+                NeonCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    borderColor = NeonGold
+                ) {
+                    Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -319,13 +320,14 @@ fun ProfileScreen(
 
                     NeonOutlinedButton(
                         text = "Open Admin",
-                        glowColor = NeonCyan,
+                        glowColor = NeonGold,
                         onClick = onAdminClicked,
                         modifier = Modifier.testTag("open_admin_portal_button")
                     )
                 }
             }
         }
+    }
 
         // Sign Out Button
         item {

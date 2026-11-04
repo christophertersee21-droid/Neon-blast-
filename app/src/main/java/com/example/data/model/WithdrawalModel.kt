@@ -1,23 +1,24 @@
 package com.example.data.model
 
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.DocumentId
-import com.google.firebase.firestore.IgnoreExtraProperties
-import com.google.firebase.firestore.ServerTimestamp
+import com.google.firebase.database.IgnoreExtraProperties
 
 @IgnoreExtraProperties
 data class WithdrawalRequest(
-    @DocumentId val id: String = "",
+    val id: String = "",
     val userId: String = "",
     val userEmail: String = "",
-    val amount: Double = 0.0,
-    val currency: String = "USD",
-    val payoutMethod: String = "PayPal", // PayPal, Bank Transfer, Crypto, Gift Card
+    val userName: String = "",
+    val amount: Double = 100.0,
+    val currency: String = "NGN",
+    val payoutMethod: String = "Nigerian Bank Transfer", // Nigerian Bank Transfer, OPay, PalmPay, Kuda
+    val bankName: String = "Access Bank",
+    val accountNumber: String = "",
+    val accountName: String = "",
     val payoutDetails: String = "",
-    val status: String = "PENDING", // PENDING, UNDER_REVIEW, APPROVED, PROCESSING, PAID, REJECTED, CANCELLED
+    val status: String = "PENDING", // PENDING, APPROVED, REJECTED, PAID
     val rejectionReason: String = "",
     val paymentReference: String = "",
     val reference: String = "",
-    @ServerTimestamp val createdAt: Timestamp? = null,
-    @ServerTimestamp val updatedAt: Timestamp? = null
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
 )

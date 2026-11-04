@@ -1,7 +1,10 @@
 package com.example.ui.screens.wallet
 
+import android.app.Activity
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,15 +17,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -33,6 +39,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,11 +50,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ads.AdMobBanner
+import com.example.ads.AdMobManager
+import com.example.data.model.AppConfig
 import com.example.data.model.UserProfile
 import com.example.data.model.WithdrawalRequest
 import com.example.data.repository.FirestoreRepository
@@ -66,7 +77,26 @@ import com.example.ui.theme.NeonPurple
 import com.example.ui.theme.NeonSurface
 import com.example.ui.theme.TextSecondary
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
+
+val NIGERIAN_BANKS = listOf(
+    "Access Bank",
+    "GTBank (Guaranty Trust)",
+    "Zenith Bank",
+    "First Bank of Nigeria",
+    "United Bank for Africa (UBA)",
+    "Kuda Bank",
+    "OPay",
+    "PalmPay",
+    "Moniepoint MFB",
+    "Stanbic IBTC Bank",
+    "Fidelity Bank",
+    "Union Bank",
+    "Sterling Bank",
+    "Wema Bank / ALAT"
+)
 
 @Composable
 fun WalletScreen(
@@ -76,8 +106,13 @@ fun WalletScreen(
     onViewTransactionsClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val activity = context as? Activity
     val scope = rememberCoroutineScope()
+    val config by repository.observeAppConfig().collectAsState(initial = AppConfig())
+
     var showWithdrawDialog by remember { mutableStateOf(false) }
+    var isWatchingAd by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier
@@ -99,181 +134,236 @@ fun WalletScreen(
                             fontWeight = FontWeight.Black,
                             letterSpacing = 2.sp
                         ),
-                        color = NeonCyan
+                        color = Color.White
                     )
                     Text(
-                        text = "Separate game and legally eligible withdrawable balances",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
+                        text = "Nigeria 🇳🇬 Real Cash Payouts",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = NeonGreen
                     )
                 }
 
                 IconButton(
                     onClick = onViewTransactionsClicked,
-                    modifier = Modifier.testTag("transactions_history_button")
+                    modifier = Modifier.testTag("ledger_button")
                 ) {
                     Icon(
                         imageVector = Icons.Default.History,
-                        contentDescription = "Transactions",
+                        contentDescription = "Transactions Ledger",
                         tint = NeonCyan
                     )
                 }
             }
         }
 
-        // Eligible Withdrawable Balance Card
+        // Primary Balance Card (Naira)
         item {
-            Box(
+            NeonCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                Color(0xFF0F2B20),
-                                Color(0xFF061A13),
-                                Color(0xFF0D1E2A)
-                            )
-                        )
-                    )
-                    .border(1.5.dp, NeonGreen, RoundedCornerShape(20.dp))
-                    .padding(20.dp)
+                    .testTag("wallet_balance_card"),
+                borderColor = NeonGreen
             ) {
-                Column {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp)
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "ELIGIBLE REWARDS WALLET",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = NeonGreen
+                            text = "AVAILABLE WITHDRAWABLE",
+                            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
+                            color = TextSecondary
                         )
-                        Icon(
-                            imageVector = Icons.Default.Payments,
-                            contentDescription = "Rewards",
-                            tint = NeonGreen
-                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(NeonGreen.copy(alpha = 0.2f))
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "NGN (₦)",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = NeonGreen
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = String.format(Locale.US, "$%.2f", user.eligibleBalance),
+                        text = "₦${String.format(Locale.US, "%,.2f", user.eligibleBalance)}",
                         style = MaterialTheme.typography.headlineLarge.copy(
                             fontWeight = FontWeight.Black,
                             letterSpacing = 1.sp
                         ),
-                        color = Color.White
+                        color = NeonGreen
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text("Pending Approval", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
-                            Text(
-                                text = String.format(Locale.US, "$%.2f", user.pendingWithdrawal),
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                color = NeonAmber
-                            )
-                        }
-                        Column {
-                            Text("Total Paid Out", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
-                            Text(
-                                text = String.format(Locale.US, "$%.2f", user.totalWithdrawn),
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                color = NeonCyan
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    NeonButton(
-                        text = "Request Withdrawal",
-                        glowColor = NeonGreen,
-                        enabled = user.eligibleBalance >= 5.0,
-                        onClick = { showWithdrawDialog = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("request_withdrawal_button")
-                    )
-                }
-            }
-        }
-
-        // Game Wallet Card
-        item {
-            NeonCard(
-                modifier = Modifier.fillMaxWidth(),
-                borderColor = NeonGold
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            text = "GAME WALLET (NON-TRANSFERABLE)",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = NeonGold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("🪙 ", fontSize = 22.sp)
-                            Text(
-                                text = "${user.gameCoins} Coins",
-                                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black),
-                                color = Color.White
-                            )
-                        }
-                        Text(
-                            text = "Used for Second Chance revival, in-game boosts, and specials.",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TextSecondary
-                        )
-                    }
-
-                    Icon(
-                        imageVector = Icons.Default.AccountBalanceWallet,
-                        contentDescription = "Wallet",
-                        tint = NeonGold,
-                        modifier = Modifier.size(36.dp)
-                    )
-                }
-            }
-        }
-
-        // Notice Box
-        item {
-            NeonCard(
-                modifier = Modifier.fillMaxWidth(),
-                borderColor = NeonCyan.copy(alpha = 0.3f)
-            ) {
-                Row(verticalAlignment = Alignment.Top) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "Notice",
-                        tint = NeonCyan,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "All wallet calculations and ledger entries are enforced securely on the backend. When a withdrawal is requested, funds are reserved until approved or restored upon rejection.",
+                        text = "Min withdrawal: ₦${config.minWithdrawalNgn.toInt()} Naira • Direct Nigerian Bank Transfer",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.8f)
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        NeonButton(
+                            text = "Withdraw ₦",
+                            glowColor = NeonGreen,
+                            onClick = { showWithdrawDialog = true },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("withdraw_button")
+                        )
+
+                        NeonOutlinedButton(
+                            text = "Ledger",
+                            glowColor = NeonCyan,
+                            onClick = onViewTransactionsClicked,
+                            modifier = Modifier.weight(0.9f)
+                        )
+                    }
                 }
             }
         }
 
-        // Recent Withdrawal Requests
+        // AdMob Rewarded Video Card
+        if (config.adMobEnabled) {
+            item {
+                NeonCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    borderColor = NeonGold
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Earn Cash with Video Ad", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("🎥", fontSize = 14.sp)
+                            }
+                            Text(
+                                text = "+${config.rewardedAdCoins} Coins & +₦${config.rewardedAdNgn} Naira per ad",
+                                color = NeonGold,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        NeonButton(
+                            text = if (isWatchingAd) "Loading..." else "Watch Ad",
+                            glowColor = NeonGold,
+                            onClick = {
+                                if (activity != null && !isWatchingAd) {
+                                    isWatchingAd = true
+                                    AdMobManager.showRewarded(
+                                        activity = activity,
+                                        adUnitId = config.adMobRewardedId,
+                                        onUserEarnedReward = {
+                                            isWatchingAd = false
+                                            scope.launch {
+                                                repository.rewardUserForWatchingAd(user.userId)
+                                                Toast.makeText(context, "🎉 Rewarded! ₦${config.rewardedAdNgn} added to wallet!", Toast.LENGTH_LONG).show()
+                                            }
+                                        },
+                                        onFailed = { err ->
+                                            isWatchingAd = false
+                                            Toast.makeText(context, "Ad not ready yet. Please try again soon.", Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        // Secondary Balances: Game Coins, Pending, and Total Paid
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Game Coins
+                NeonCard(
+                    modifier = Modifier.weight(1f),
+                    borderColor = NeonGold.copy(alpha = 0.5f)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("GAME COINS", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "${user.gameCoins}",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = NeonGold
+                        )
+                        Text("For game revives", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                    }
+                }
+
+                // Pending Withdrawals
+                NeonCard(
+                    modifier = Modifier.weight(1f),
+                    borderColor = NeonAmber.copy(alpha = 0.5f)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("IN PROCESSING", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "₦${String.format(Locale.US, "%,.2f", user.pendingWithdrawal)}",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = NeonAmber
+                        )
+                        Text("Awaiting Admin", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                    }
+                }
+            }
+        }
+
+        // Total Withdrawn Card
+        item {
+            NeonCard(
+                modifier = Modifier.fillMaxWidth(),
+                borderColor = NeonCyan.copy(alpha = 0.4f)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("TOTAL PAID OUT", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                        Text(
+                            text = "₦${String.format(Locale.US, "%,.2f", user.totalWithdrawn)} Naira",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = NeonCyan
+                        )
+                    }
+                    Text("Instant NUBAN Payouts 🏦", color = TextSecondary, fontSize = 12.sp)
+                }
+            }
+        }
+
+        // Withdrawal History
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -281,12 +371,12 @@ fun WalletScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Recent Withdrawal Requests",
+                    text = "Withdrawal Requests",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = Color.White
                 )
                 TextButton(onClick = onViewTransactionsClicked) {
-                    Text("Ledger History", color = NeonCyan)
+                    Text("Audit Ledger", color = NeonCyan)
                 }
             }
         }
@@ -299,47 +389,37 @@ fun WalletScreen(
                         .padding(20.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No withdrawal requests yet.", color = TextSecondary)
+                    Text("No withdrawal requests yet. Play or watch ads to withdraw!", color = TextSecondary)
                 }
             }
         } else {
-            items(withdrawals, key = { it.id }) { req ->
+            items(withdrawals) { req ->
                 NeonCard(
                     modifier = Modifier.fillMaxWidth(),
                     borderColor = when (req.status) {
-                        "PAID" -> NeonGreen
-                        "APPROVED" -> NeonCyan
+                        "APPROVED" -> NeonGreen
                         "REJECTED" -> DangerNeon
                         else -> NeonAmber
                     }
                 ) {
-                    Column {
+                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
-                                Text(
-                                    text = String.format(Locale.US, "$%.2f %s", req.amount, req.currency),
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = Color.White
-                                )
-                                Text(
-                                    text = "${req.payoutMethod} • ${req.reference}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = TextSecondary
-                                )
-                            }
-
-                            // Status badge
+                            Text(
+                                text = "₦${req.amount} NGN",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(
                                         when (req.status) {
-                                            "PAID" -> NeonGreen.copy(alpha = 0.2f)
-                                            "APPROVED" -> NeonCyan.copy(alpha = 0.2f)
+                                            "APPROVED" -> NeonGreen.copy(alpha = 0.2f)
                                             "REJECTED" -> DangerNeon.copy(alpha = 0.2f)
                                             else -> NeonAmber.copy(alpha = 0.2f)
                                         }
@@ -348,10 +428,10 @@ fun WalletScreen(
                             ) {
                                 Text(
                                     text = req.status,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
                                     color = when (req.status) {
-                                        "PAID" -> NeonGreen
-                                        "APPROVED" -> NeonCyan
+                                        "APPROVED" -> NeonGreen
                                         "REJECTED" -> DangerNeon
                                         else -> NeonAmber
                                     }
@@ -359,26 +439,25 @@ fun WalletScreen(
                             }
                         }
 
-                        if (req.rejectionReason.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Reason: ${req.rejectionReason} (Funds Restored)",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = DangerNeon
-                            )
-                        }
+                        Text(text = "${req.bankName} • ${req.accountNumber} (${req.accountName})", color = TextSecondary, fontSize = 12.sp)
+                        Text(text = "Ref: ${req.reference}", color = TextSecondary, fontSize = 11.sp)
 
-                        if (req.paymentReference.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Tx Ref: ${req.paymentReference}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = NeonGreen
-                            )
+                        if (req.status == "REJECTED" && req.rejectionReason.isNotBlank()) {
+                            Text(text = "Rejected Reason: ${req.rejectionReason} (Refunded)", color = DangerNeon, fontSize = 11.sp)
+                        } else if (req.status == "APPROVED" && req.paymentReference.isNotBlank()) {
+                            Text(text = "Payment Ref: ${req.paymentReference}", color = NeonGreen, fontSize = 11.sp)
                         }
                     }
                 }
             }
+        }
+
+        // AdMob Banner
+        item {
+            AdMobBanner(
+                adUnitId = config.adMobBannerId,
+                isEnabled = config.adMobEnabled
+            )
         }
 
         item {
@@ -386,108 +465,146 @@ fun WalletScreen(
         }
     }
 
-    // Withdrawal Request Dialog
+    // Nigerian Withdrawal Request Dialog
     if (showWithdrawDialog) {
-        var withdrawAmountText by remember { mutableStateOf("5.00") }
-        var selectedPayoutMethod by remember { mutableStateOf("PayPal") }
-        var payoutDetailsText by remember { mutableStateOf(user.email) }
+        var withdrawAmountText by remember { mutableStateOf("${config.minWithdrawalNgn.toInt()}") }
+        var selectedBank by remember { mutableStateOf(NIGERIAN_BANKS.first()) }
+        var accountNumberText by remember { mutableStateOf("") }
+        var accountNameText by remember { mutableStateOf(user.username) }
         var isSubmitting by remember { mutableStateOf(false) }
         var dialogError by remember { mutableStateOf<String?>(null) }
-        val payoutOptions = listOf("PayPal", "Bank Transfer", "Crypto (USDT)", "Gift Card")
+        var showBankPicker by remember { mutableStateOf(false) }
+
+        val minAmount = config.minWithdrawalNgn
+        val presets = listOf(100.0, 250.0, 500.0, 1000.0, 5000.0)
 
         AlertDialog(
             onDismissRequest = { if (!isSubmitting) showWithdrawDialog = false },
             title = {
-                Text("SUBMIT WITHDRAWAL", color = NeonGreen, fontWeight = FontWeight.Black)
+                Text("WITHDRAW NAIRA (₦)", color = NeonGreen, fontWeight = FontWeight.Black)
             },
             text = {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "Available: ${String.format(Locale.US, "$%.2f", user.eligibleBalance)}",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = Color.White
+                        text = "Balance: ₦${String.format(Locale.US, "%,.2f", user.eligibleBalance)} (Min: ₦${minAmount.toInt()})",
+                        color = Color.White,
+                        fontSize = 13.sp
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Presets
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(presets) { p ->
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(NeonSurface)
+                                    .border(1.dp, if (withdrawAmountText == "${p.toInt()}") NeonGreen else Color(0x33334166), RoundedCornerShape(8.dp))
+                                    .clickable { withdrawAmountText = "${p.toInt()}" }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Text("₦${p.toInt()}", color = if (withdrawAmountText == "${p.toInt()}") NeonGreen else TextSecondary, fontSize = 12.sp)
+                            }
+                        }
+                    }
 
                     // Amount Field
                     OutlinedTextField(
                         value = withdrawAmountText,
                         onValueChange = { withdrawAmountText = it },
-                        label = { Text("Amount ($)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NeonGreen,
-                            unfocusedBorderColor = NeonCardBorder,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        )
+                        label = { Text("Amount in Naira (₦)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = NeonGreen),
+                        modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    // Bank Selection
+                    Column {
+                        Text("Select Nigerian Bank:", color = TextSecondary, fontSize = 12.sp)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(NeonSurface)
+                                .border(1.dp, NeonCyan, RoundedCornerShape(8.dp))
+                                .clickable { showBankPicker = !showBankPicker }
+                                .padding(12.dp)
+                        ) {
+                            Text(selectedBank, color = Color.White, fontSize = 13.sp)
+                        }
 
-                    Text("Payout Method:", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        payoutOptions.take(2).forEach { method ->
-                            val isSel = selectedPayoutMethod == method
-                            Box(
+                        if (showBankPicker) {
+                            Column(
                                 modifier = Modifier
-                                    .weight(1f)
+                                    .fillMaxWidth()
+                                    .height(130.dp)
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isSel) NeonGreen.copy(alpha = 0.25f) else NeonSurface)
-                                    .border(1.dp, if (isSel) NeonGreen else Color(0x33334166), RoundedCornerShape(8.dp))
-                                    .padding(8.dp),
-                                contentAlignment = Alignment.Center
+                                    .background(NeonBackground)
+                                    .padding(4.dp)
                             ) {
-                                TextButton(onClick = { selectedPayoutMethod = method }) {
-                                    Text(method, color = if (isSel) NeonGreen else TextSecondary, fontSize = 12.sp)
+                                LazyColumn {
+                                    items(NIGERIAN_BANKS) { bank ->
+                                        Text(
+                                            text = bank,
+                                            color = if (bank == selectedBank) NeonGreen else Color.White,
+                                            fontSize = 12.sp,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    selectedBank = bank
+                                                    showBankPicker = false
+                                                }
+                                                .padding(6.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Payout Details
+                    // 10-Digit Account Number
                     OutlinedTextField(
-                        value = payoutDetailsText,
-                        onValueChange = { payoutDetailsText = it },
-                        label = { Text("Payout Details (Email / Wallet / IBAN)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NeonGreen,
-                            unfocusedBorderColor = NeonCardBorder,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        )
+                        value = accountNumberText,
+                        onValueChange = { if (it.length <= 10 && it.all { c -> c.isDigit() }) accountNumberText = it },
+                        label = { Text("10-Digit NUBAN Account Number") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = NeonGreen),
+                        modifier = Modifier.fillMaxWidth()
                     )
 
-                    if (dialogError != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(dialogError ?: "", color = DangerNeon, style = MaterialTheme.typography.bodySmall)
+                    // Account Name
+                    OutlinedTextField(
+                        value = accountNameText,
+                        onValueChange = { accountNameText = it },
+                        label = { Text("Account Holder Full Name") },
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = NeonGreen),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    dialogError?.let { err ->
+                        Text(text = err, color = DangerNeon, fontSize = 12.sp)
                     }
                 }
             },
             confirmButton = {
                 NeonButton(
-                    text = "Submit Request",
+                    text = if (isSubmitting) "Submitting..." else "Confirm Withdrawal",
                     glowColor = NeonGreen,
-                    enabled = !isSubmitting,
                     onClick = {
-                        val amount = withdrawAmountText.toDoubleOrNull()
-                        if (amount == null || amount < 5.0) {
-                            dialogError = "Minimum withdrawal is $5.00."
+                        val amount = withdrawAmountText.toDoubleOrNull() ?: 0.0
+                        if (amount < minAmount) {
+                            dialogError = "Minimum withdrawal is ₦${minAmount.toInt()} Naira"
                             return@NeonButton
                         }
                         if (amount > user.eligibleBalance) {
-                            dialogError = "Insufficient eligible balance."
+                            dialogError = "Insufficient balance (₦${user.eligibleBalance} available)"
                             return@NeonButton
                         }
-                        if (payoutDetailsText.isBlank()) {
-                            dialogError = "Please enter payout details."
+                        if (accountNumberText.length != 10) {
+                            dialogError = "Account number must be exactly 10 digits"
+                            return@NeonButton
+                        }
+                        if (accountNameText.isBlank()) {
+                            dialogError = "Please enter account name"
                             return@NeonButton
                         }
 
@@ -495,30 +612,29 @@ fun WalletScreen(
                         dialogError = null
                         scope.launch {
                             val res = repository.requestWithdrawal(
+                                userId = user.userId,
+                                userEmail = user.email,
                                 amount = amount,
-                                payoutMethod = selectedPayoutMethod,
-                                payoutDetails = payoutDetailsText,
-                                userEmail = user.email
+                                bankName = selectedBank,
+                                accountNumber = accountNumberText,
+                                accountName = accountNameText
                             )
                             isSubmitting = false
                             if (res.isSuccess) {
                                 showWithdrawDialog = false
                             } else {
-                                dialogError = res.exceptionOrNull()?.message ?: "Failed to submit."
+                                dialogError = res.exceptionOrNull()?.message ?: "Withdrawal request failed"
                             }
                         }
                     }
                 )
             },
             dismissButton = {
-                NeonOutlinedButton(
-                    text = "Cancel",
-                    glowColor = TextSecondary,
-                    onClick = { showWithdrawDialog = false }
-                )
+                TextButton(onClick = { showWithdrawDialog = false }) {
+                    Text("Cancel", color = TextSecondary)
+                }
             },
-            containerColor = NeonSurface,
-            shape = RoundedCornerShape(18.dp)
+            containerColor = NeonSurface
         )
     }
 }
