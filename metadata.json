@@ -1,0 +1,6 @@
+{
+  "name": "Neon Blast",
+  "description": "Premium neon block puzzle game with real-time scoring, combos, rewards, daily challenges, and AI puzzle master.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,39 @@
+workflows:
+  android-release:
+    name: Neon Blast Android Release
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      groups:
+        - google_play_credentials
+      vars:
+        PACKAGE_NAME: "com.aistudio.neonblast.rpkxmq"
+    triggering:
+      events:
+        - push
+        - tag
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+          source: true
+    scripts:
+      - name: Set up environment and local properties
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+      - name: Run Unit and Rules Tests
+        script: |
+          gradle testDebugUnitTest
+      - name: Build Android Release APK and App Bundle (AAB)
+        script: |
+          gradle assembleRelease bundleRelease --stacktrace
+    artifacts:
+      - app/build/outputs/apk/release/*.apk
+      - app/build/outputs/bundle/release/*.aab
+      - app/build/outputs/mapping/release/mapping.txt
+    publishing:
+      email:
+        recipients:
+          - velanducee@gmail.com
+        notify:
+          success: true
+          failure: true

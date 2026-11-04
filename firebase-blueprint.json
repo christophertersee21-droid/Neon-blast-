@@ -1,0 +1,135 @@
+{
+  "entities": {
+    "users": {
+      "path": "users/{userId}",
+      "description": "User profile, statistics, and wallet balances",
+      "fields": {
+        "userId": { "type": "string", "required": true },
+        "username": { "type": "string", "required": true },
+        "email": { "type": "string", "required": true },
+        "photoUrl": { "type": "string", "required": false },
+        "referralCode": { "type": "string", "required": true },
+        "referredBy": { "type": "string", "required": false },
+        "bestScore": { "type": "number", "required": false },
+        "gamesPlayed": { "type": "number", "required": false },
+        "linesCleared": { "type": "number", "required": false },
+        "gameCoins": { "type": "number", "required": false },
+        "eligibleBalance": { "type": "number", "required": false },
+        "pendingWithdrawal": { "type": "number", "required": false },
+        "totalWithdrawn": { "type": "number", "required": false },
+        "dailyStreak": { "type": "number", "required": false },
+        "lastLoginDate": { "type": "string", "required": false },
+        "isAdmin": { "type": "boolean", "required": false },
+        "isSuspended": { "type": "boolean", "required": false },
+        "createdAt": { "type": "timestamp", "required": false },
+        "updatedAt": { "type": "timestamp", "required": false }
+      }
+    },
+    "game_sessions": {
+      "path": "game_sessions/{sessionId}",
+      "description": "Recorded game results and telemetry",
+      "fields": {
+        "sessionId": { "type": "string", "required": true },
+        "userId": { "type": "string", "required": true },
+        "score": { "type": "number", "required": true },
+        "linesCleared": { "type": "number", "required": true },
+        "combos": { "type": "number", "required": true },
+        "durationSeconds": { "type": "number", "required": true },
+        "createdAt": { "type": "timestamp", "required": false }
+      }
+    },
+    "tasks": {
+      "path": "tasks/{taskId}",
+      "description": "Task definitions",
+      "fields": {
+        "title": { "type": "string", "required": true },
+        "description": { "type": "string", "required": true },
+        "category": { "type": "string", "required": true },
+        "target": { "type": "number", "required": true },
+        "rewardCoins": { "type": "number", "required": true },
+        "rewardEligible": { "type": "number", "required": true },
+        "isActive": { "type": "boolean", "required": true },
+        "createdAt": { "type": "timestamp", "required": false }
+      }
+    },
+    "user_tasks": {
+      "path": "user_tasks/{userTaskId}",
+      "description": "User task tracking and claim status",
+      "fields": {
+        "userId": { "type": "string", "required": true },
+        "taskId": { "type": "string", "required": true },
+        "currentProgress": { "type": "number", "required": true },
+        "target": { "type": "number", "required": true },
+        "isCompleted": { "type": "boolean", "required": true },
+        "isClaimed": { "type": "boolean", "required": true },
+        "updatedAt": { "type": "timestamp", "required": false }
+      }
+    },
+    "transactions": {
+      "path": "transactions/{transactionId}",
+      "description": "Auditable transaction ledger records",
+      "fields": {
+        "userId": { "type": "string", "required": true },
+        "type": { "type": "string", "required": true },
+        "amount": { "type": "number", "required": true },
+        "currency": { "type": "string", "required": true },
+        "balanceAfter": { "type": "number", "required": true },
+        "status": { "type": "string", "required": true },
+        "description": { "type": "string", "required": true },
+        "reference": { "type": "string", "required": true },
+        "createdAt": { "type": "timestamp", "required": false }
+      }
+    },
+    "withdrawals": {
+      "path": "withdrawals/{withdrawalId}",
+      "description": "Withdrawal requests and review lifecycle",
+      "fields": {
+        "userId": { "type": "string", "required": true },
+        "userEmail": { "type": "string", "required": true },
+        "amount": { "type": "number", "required": true },
+        "currency": { "type": "string", "required": true },
+        "payoutMethod": { "type": "string", "required": true },
+        "payoutDetails": { "type": "string", "required": true },
+        "status": { "type": "string", "required": true },
+        "rejectionReason": { "type": "string", "required": false },
+        "reference": { "type": "string", "required": true },
+        "createdAt": { "type": "timestamp", "required": false },
+        "updatedAt": { "type": "timestamp", "required": false }
+      }
+    },
+    "announcements": {
+      "path": "announcements/{announcementId}",
+      "description": "System announcements",
+      "fields": {
+        "title": { "type": "string", "required": true },
+        "content": { "type": "string", "required": true },
+        "actionUrl": { "type": "string", "required": false },
+        "isActive": { "type": "boolean", "required": true },
+        "createdAt": { "type": "timestamp", "required": false }
+      }
+    },
+    "notifications": {
+      "path": "notifications/{notificationId}",
+      "description": "In-app notifications",
+      "fields": {
+        "userId": { "type": "string", "required": true },
+        "title": { "type": "string", "required": true },
+        "message": { "type": "string", "required": true },
+        "type": { "type": "string", "required": true },
+        "isRead": { "type": "boolean", "required": true },
+        "createdAt": { "type": "timestamp", "required": false }
+      }
+    },
+    "app_settings": {
+      "path": "app_settings/{settingId}",
+      "description": "Global application configuration",
+      "fields": {
+        "minWithdrawal": { "type": "number", "required": false },
+        "maxWithdrawal": { "type": "number", "required": false },
+        "maintenanceMode": { "type": "boolean", "required": false },
+        "dailyBonusCoins": { "type": "number", "required": false },
+        "comboMultiplierBonus": { "type": "number", "required": false }
+      }
+    }
+  }
+}
